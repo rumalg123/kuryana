@@ -26,7 +26,7 @@ def error(code: int, description: str) -> Dict[str, Any]:
 async def search_func(query: str) -> Tuple[int, Dict[str, Any]]:
     f = await Search.scrape(query=query, t="search")
     if not f.ok:
-        return f.status_code, error(f.status_code, "An unexpected error occurred.")
+        return f.status_code, error(f.status_code, f.upstream_error or "An unexpected error occurred.")
     else:
         f._get_search_results()
 
