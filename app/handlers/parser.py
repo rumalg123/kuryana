@@ -66,7 +66,7 @@ class Parser:
                 code = 502
                 ok = False
                 upstream_error = "MyDramaList returned a Cloudflare challenge"
-            elif not ok:
+            elif not ok and resp.status_code != 404:
                 upstream_error = f"MyDramaList returned HTTP {resp.status_code}"
 
         except Exception as exc:
