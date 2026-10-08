@@ -32,6 +32,7 @@ class Parser:
         self.query = query
         self.status_code = code
         self.ok = ok
+        self.upstream_error = None
 
     @classmethod
     async def scrape(cls: Type[T], query: str, t: str) -> T:
@@ -46,6 +47,7 @@ class Parser:
         ok = True
         code = 500  # default to 500, internal server error
         soup = None
+        upstream_error = None
 
         try:
             client = primp.Client(impersonate="chrome_131", impersonate_os="linux")
@@ -60,14 +62,25 @@ class Parser:
             # set the status code
             code = resp.status_code
             ok = resp.status_code == 200
+            if resp.headers.get("cf-mitigated", "").lower() == "challenge":
+                code = 502
+                ok = False
+                upstream_error = "MyDramaList returned a Cloudflare challenge"
+            elif not ok:
+                upstream_error = f"MyDramaList returned HTTP {resp.status_code}"
 
-        except Exception:
+        except Exception as exc:
             ok = False
+            upstream_error = f"Upstream request failed: {type(exc).__name__}"
 
-        return cls(soup, query, code, ok)
+        result = cls(soup, query, code, ok)
+        result.upstream_error = upstream_error
+        return result
 
     # get page err, if possible
     def res_get_err(self) -> Dict[str, Any]:
+        if self.upstream_error:
+            return {"error": True, "code": self.status_code, "description": self.upstream_error}
         if self.soup is None:
             return {}
 
