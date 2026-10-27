@@ -18,3 +18,9 @@ __pycache__/
 # virtual environments 
 .venv
 venv 
+
+# Ignore backup files
+*.bak
+
+# Ignore private Docker Compose configuration
+compose.private.yaml
